@@ -2,7 +2,7 @@
 #                                                                                  #
 #  Copyright (c) 2014 - 2018 Axel Menzel <info@rttr.org>                           #
 #                                                                                  #
-#  This file is part of RTTR (Run Time Type Reflection)                            #
+#  This file is part of the examples of RTTR (Run Time Type Reflection)            #
 #  License: MIT License                                                            #
 #                                                                                  #
 #  Permission is hereby granted, free of charge, to any person obtaining           #
@@ -25,52 +25,11 @@
 #                                                                                  #
 ####################################################################################
 
-####################################################################################
-# Search and install 3rd party libraries
-#
-####################################################################################
+set(HEADER_FILES serialization_visitor.h
+                 player.h
+                 version.rc.in
+                 )
 
-MESSAGE(STATUS ${LIBRARY_OUTPUT_DIRECTORY})
-MESSAGE(STATUS "Finding 3rd party libs...")
-MESSAGE(STATUS "===========================")
-
-if (BUILD_BENCHMARKS)
-    if (MSVC)
-        # there is a the moment a problem with finding multiple versions of boost,
-        # i.e. the static AND the static runtime version; that is not possible atm.
-        # Because of that, the benchmarks cannot be build with the static runtime lib option enabled
-        set(Boost_USE_STATIC_LIBS       ON)
-        set(Boost_USE_STATIC_RUNTIME    OFF)
-        set(BOOST_ALL_DYN_LINK          OFF)
-
-        find_package(Boost COMPONENTS chrono system)
-    else()
-        find_package(Boost)
-    endif()
-endif()
-
-if (BUILD_BENCHMARKS OR BUILD_EXAMPLES)
-    find_package(Threads REQUIRED)
-endif()
-
-set(RAPID_JSON_DIR ${RTTR_3RD_PARTY_DIR}/rapidjson-1.1.0)
-set(NONIUS_DIR ${RTTR_3RD_PARTY_DIR}/nonius-1.1.2)
-
-# Prepare "Catch" library for other executables
-set(CATCH_INCLUDE_DIR ${RTTR_3RD_PARTY_DIR}/catch-1.12.0)
-add_library(Catch INTERFACE)
-add_library(Catch2::Catch ALIAS Catch)
-target_include_directories(Catch INTERFACE ${CATCH_INCLUDE_DIR})
-
-# Find chai script
-set(CHAISCRIPT_INCLUDE_DIR ${RTTR_3RD_PARTY_DIR}/chaiscript-6.1.0)
-add_library(ChaiScript INTERFACE)
-add_library(ChaiScript::ChaiScript ALIAS ChaiScript)
-target_include_directories(ChaiScript INTERFACE ${CHAISCRIPT_INCLUDE_DIR})
-
-# Find bitsery
-set(BITSERY_INCLUDE_DIR ${RTTR_3RD_PARTY_DIR})
-add_library(Bitsery INTERFACE)
-target_include_directories(Bitsery INTERFACE ${BITSERY_INCLUDE_DIR})
-
-MESSAGE(STATUS "Finished finding 3rd party libs!")
+set(SOURCE_FILES main.cpp
+                 player.cpp
+                 )
