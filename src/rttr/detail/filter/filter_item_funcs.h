@@ -43,7 +43,8 @@ namespace detail
 static bool is_valid_filter_item(filter_items filter)
 {
     if ((filter.test_flag(filter_item::public_access) ||
-         filter.test_flag(filter_item::non_public_access)) &&
+         filter.test_flag(filter_item::non_public_access) ||
+         filter.test_flag(filter_item::serialize_access)) &&
         (filter.test_flag(filter_item::instance_item) ||
         filter.test_flag(filter_item::static_item)))
     {
@@ -72,6 +73,12 @@ RTTR_INLINE bool filter_member_item(const T& item, const type& t, filter_items f
     {
         const auto access_level = item.get_access_level();
         result &= (access_level == access_levels::private_access || access_level == access_levels::protected_access);
+    }
+
+
+    if (filter.test_flag(filter_item::serialize_access))
+    {
+        result &= (item.get_access_level() == access_levels::serialize_access);
     }
 
     if (filter.test_flag(filter_item::instance_item) && filter.test_flag(filter_item::static_item))

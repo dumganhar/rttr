@@ -117,6 +117,8 @@ public:
      */
     void visit(type t);
 
+    void visit_for_serialization(type t);
+
     /*!
      * \brief Calling this function will indirectly call the function \ref visit_method()
      *        for the underlying registered type.
@@ -492,7 +494,8 @@ public:
     void visit_global_readonly_property(const property_info<T>& info);
 
 private:
-    void visit_impl(const type& t);
+    void visit_impl(const type& t, filter_items filter);
+    void visit_impl_serialization(const type& t);
 
 private:
     RTTR_ENABLE();

@@ -57,7 +57,9 @@ enum class access_levels
     /*!
      * Declares that this member was registered with `private` access.
      */
-    private_access
+    private_access,
+
+    serialize_access
 };
 
 } // end namespace rttr

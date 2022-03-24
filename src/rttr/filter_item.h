@@ -75,7 +75,9 @@ enum class filter_item
      * \brief Returns all members declared for the current type;
      *        inherited members are not returned.
      */
-    declared_only = 16
+    declared_only = 16,
+
+    serialize_access = 32,
 };
 
 RTTR_DECLARE_FLAGS(filter_items, filter_item)

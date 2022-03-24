@@ -26,110 +26,102 @@
 *************************************************************************************/
 
 #include <iostream>
+#include <string>
 
 #include <rttr/type>
-
 
 #include "serialization_visitor.h"
 #include "my_visitor.h"
 
 #include <rttr/registration>
 
-#include <rttr/detail/visitor/visitor_iterator.h>
+#include <rttr/registration_friend> // important!
 
-
-
-//#define CC_SERIALIZE_FUNCTION(classType) \
-//template<typename AdapterType> \
-//void serialize(bitsery::Serializer<AdapterType> & s, classType& obj) { \
-//    my_serialization_visitor vi(&obj, s.getSerializeType()); \
-//    vi._serializer_OutputAdapter = &s; \
-//    vi.visit(rttr::type::get<classType>()); \
-//} \
-//\
-//template<typename AdapterType> \
-//void serialize(bitsery::Deserializer<AdapterType> & s, classType& obj) { \
-//    my_serialization_visitor vi(&obj, s.getSerializeType()); \
-//    vi._deserializer_InputAdapter = &s; \
-//    vi.visit(rttr::type::get<classType>()); \
-//}
-
-#define CC_SERIALIZE_ACCESS(classType, outputAdapterType, inputAdapterType) \
-void serialize(bitsery::Serializer<outputAdapterType> & s) { \
-    serialization_visitor vi(this, s.getSerializeType()); \
-    vi._serializer_##outputAdapterType = &s; \
-    vi.visit(rttr::type::get<classType>()); \
-}\
-void serialize(bitsery::Deserializer<inputAdapterType> & s) { \
-    serialization_visitor vi(this, s.getSerializeType()); \
-    vi._deserializer_##inputAdapterType = &s; \
-    vi.visit(rttr::type::get<classType>()); \
-}
+#include <bitsery/brief_syntax/string.h>
 
 enum class MyEnum:uint16_t { V1,V2,V3 };
 
+#define CC_CLASS(classType, ...) \
+public: \
+    template<typename S> \
+    void serialize(S& s) { \
+        serialization_visitor<S> vi(this, &s); \
+        vi.visit_for_serialization(rttr::type::get<classType>()); \
+    } \
+    RTTR_ENABLE(__VA_ARGS__) \
+    RTTR_REGISTRATION_FRIEND \
+private:
+
+
 struct MyStruct {
-    uint32_t i;
-    MyEnum e;
+    CC_CLASS(MyStruct)
+public:
+    MyStruct() {}
+    MyStruct(uint32_t ai, MyEnum ae, const std::vector<float>& afs)
+    : i(ai)
+    , e(ae)
+    , fs(afs)
+    {}
+
+    uint32_t get_i() const { return i; }
+    MyEnum get_e() const { return e; }
+    const std::vector<float> &get_fs() const { return fs; }
+    int jjj{};
+private:
+    uint32_t i{};
+    MyEnum e{};
     std::vector<float> fs;
 
-//    CC_SERIALIZE_ACCESS(MyStruct, OutputAdapter, InputAdapter)
+
+//public:
+//    template<typename S>
+//    void serialize(S& s) {
+//        serialization_visitor<S> vi(this, &s);
+//        vi.visit(rttr::type::get<MyStruct>());
+//    }
+//
+//    RTTR_ENABLE()
+//    RTTR_REGISTRATION_FRIEND
 };
 
-//struct MyDummyVisitor : public rttr::visitor {};
+struct MyStruct3 {
+    CC_CLASS(MyStruct3)
+public:
+    std::string m_haha;
+};
 
-//namespace rttr { namespace detail {
-//
-//template<>
-//struct visitor_iterator<
-//            serialization_visitor<bitsery::Serializer<bitsery::OutputBufferAdapter<std::vector<unsigned char>>>>,
-//            serialization_visitor<bitsery::Deserializer<bitsery::InputBufferAdapter<std::vector<unsigned char>>>>> {
-//
-//    static void visit(visitor& visitor, const rttr::detail::type_visitor_invoker<rttr::type_list<MyStruct, rttr::type_list<>>>& invoker)
-//    {
-//    }
-//};
-//
-//}}
+struct MySubStruct : public MyStruct {
+    CC_CLASS(MySubStruct, MyStruct)
+public:
+    MySubStruct() {}
+    MySubStruct(uint32_t ai, MyEnum ae, const std::vector<float>& afs, const std::string& hello) : MyStruct(ai, ae, afs) {
+        m_hello = hello;
+    }
 
-//CC_SERIALIZE_FUNCTION(MyStruct)
+    const std::string& get_hello() const { return m_hello; }
+    MyStruct3 m_mystruct;
+private:
+    std::string m_hello;
 
-template<typename S>
-void serialize(S& s, MyStruct& obj) {
-    serialization_visitor<S> vi(&obj, &s);
-    vi.visit(rttr::type::get<MyStruct>());
-}
-
-
-//template<typename OutputAdapterType>
-//void serialize(bitsery::Serializer<OutputAdapterType> & s, MyStruct& obj) {
-//    {
-//        serialization_visitor vi(&obj, s.getSerializeType());
-//        vi._serializer_OutputAdapter = &s;
-//        vi.visit(rttr::type::get<MyStruct>());
+//public:
+//    template<typename S>
+//    void serialize(S& s) {
+//        serialization_visitor<S> vi(this, &s);
+//        vi.visit(rttr::type::get<MySubStruct>());
 //    }
 //
-//    {
-//        my_visitor vi(&obj);
-//        vi.visit(rttr::type::get<MyStruct>());
-//    }
+//
+//    RTTR_ENABLE(MyStruct)
+//    RTTR_REGISTRATION_FRIEND
+};
+
+
+
+//template<typename S>
+//void serialize(S& s, MySubStruct& obj) {
+//    serialization_visitor<S> vi(&obj, &s);
+//    vi.visit(rttr::type::get<MySubStruct>());
 //}
-//
-//template<typename InputAdapterType>
-//void serialize(bitsery::Deserializer<InputAdapterType> & s, MyStruct& obj) {
-//    {
-//        serialization_visitor vi(&obj, s.getSerializeType());
-//        vi._deserializer_InputAdapter = &s;
-//        vi.visit(rttr::type::get<MyStruct>());
-//    }
-//
-//    {
-//        my_visitor vi(&obj);
-//        vi.visit(rttr::type::get<MyStruct>());
-//    }
-//}
-
-
 
 
 using namespace rttr;
@@ -137,8 +129,12 @@ using namespace rttr;
 int main(int argc, char** argv)
 {
     //set some random data
-    MyStruct data{8941, MyEnum::V2, {15.0f, -8.5f, 0.045f}};
-    MyStruct res{};
+//    MyStruct data{8941, MyEnum::V2, {15.0f, -8.5f, 0.045f}};
+//    MyStruct res{};
+
+    MySubStruct data{8941, MyEnum::V2, {15.0f, -8.5f, 0.045f}, "world"};
+    data.m_mystruct.m_haha = "hahaha";
+    MySubStruct res{};
 
     //serialization, deserialization flow is unchanged as in basic usage
     Buffer buffer;
@@ -147,7 +143,9 @@ int main(int argc, char** argv)
     auto state = bitsery::quickDeserialization<InputAdapter>({buffer.begin(), writtenSize}, res);
 
     assert(state.first == bitsery::ReaderError::NoError && state.second);
-    assert(data.fs == res.fs && data.i == res.i && data.e == res.e);
+    assert(data.get_fs() == res.get_fs() && data.get_i() == res.get_i() && data.get_e() == res.get_e());
+    assert(data.get_hello() == res.get_hello());
+    assert(data.m_mystruct.m_haha == res.m_mystruct.m_haha);
 
     return 0;
 }
@@ -156,9 +154,23 @@ RTTR_REGISTRATION
 {
     rttr::registration::class_<MyStruct>("MyStruct")
         .constructor<>()
-        .property("i", &MyStruct::i)
-        .property("e", &MyStruct::e)
-        .property("fs", &MyStruct::fs)
+        .property("i", &MyStruct::i, registration::serialize_access)
+        .property("e", &MyStruct::e, registration::serialize_access)
+        .property("fs", &MyStruct::fs, registration::serialize_access)
+        .property("jjj", &MyStruct::jjj)
     ;
+
+    rttr::registration::class_<MyStruct3>("MyStruct3")
+        .constructor<>()
+        .property("m_haha", &MyStruct3::m_haha, registration::serialize_access)
+    ;
+
+    rttr::registration::class_<MySubStruct>("MySubStruct")
+        .constructor<>()
+        .constructor<uint32_t, MyEnum, std::vector<float>&& , std::string&& >()
+        .property("m_hello", &MySubStruct::m_hello, registration::serialize_access)
+        .property("m_mystruct", &MySubStruct::m_mystruct, registration::serialize_access)
+    ;
+
 }
 

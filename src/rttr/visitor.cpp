@@ -48,22 +48,28 @@ visitor::~visitor()
 
 void visitor::visit(type t)
 {
+    const auto filter = filter_item::instance_item | filter_item::static_item |
+                        filter_item::public_access | filter_item::non_public_access |
+                        filter_item::declared_only;
+
     // first we visit all base classes
     for (auto& t_ : t.get_base_classes())
-        visit_impl(t_);
+        visit_impl(t_, filter);
 
     // as last step, the current type itself
-    visit_impl(t);
+    visit_impl(t, filter);
+}
+
+void visitor::visit_for_serialization(type t) {
+    // as last step, the current type itself
+    visit_impl_serialization(t);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-void visitor::visit_impl(const type& t)
+void visitor::visit_impl(const type& t, filter_items filter)
 {
     t.visit(*this, detail::type_of_visit::begin_visit_type);
-    const auto filter = filter_item::instance_item | filter_item::static_item |
-                        filter_item::public_access | filter_item::non_public_access |
-                        filter_item::declared_only;
 
     for (auto ctor : t.get_constructors(filter))
     {
@@ -78,6 +84,19 @@ void visitor::visit_impl(const type& t)
     for (auto meth : t.get_methods(filter))
     {
         meth.visit(*this);
+    }
+
+    t.visit(*this, detail::type_of_visit::end_visit_type);
+}
+
+void visitor::visit_impl_serialization(const type& t)
+{
+    const auto filter = filter_item::instance_item | filter_item::static_item | filter_item::serialize_access;
+    t.visit(*this, detail::type_of_visit::begin_visit_type);
+
+    for (auto prop : t.get_properties(filter))
+    {
+        prop.visit(*this);
     }
 
     t.visit(*this, detail::type_of_visit::end_visit_type);

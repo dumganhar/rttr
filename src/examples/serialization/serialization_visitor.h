@@ -43,52 +43,20 @@
 //otherwise we'll get static assert error, saying to define serialize function.
 #include <bitsery/brief_syntax/vector.h>
 
-
-
-
 //some helper types
 using Buffer = std::vector<uint8_t>;
 using OutputAdapter = bitsery::OutputBufferAdapter<Buffer>;
 using InputAdapter = bitsery::InputBufferAdapter<Buffer>;
-
-#define CC_SERIALIZATION_VISITOR_PROPERTIES(OutputAdapterType, InputAdapterType) \
-    bitsery::Serializer<OutputAdapterType>* _serializer_##OutputAdapterType{}; \
-    bitsery::Deserializer<InputAdapterType>* _deserializer_##InputAdapterType{};
-
-
-#define CC_SERIALIZATION_VISITOR_PROPERTIES_HANDLER(OutputAdapterType, InputAdapterType) \
-    switch (_serializeType) { \
-        case bitsery::SerializeType::SERIALIZE: \
-            (*_serializer_##OutputAdapterType)(property); \
-            break; \
-        case bitsery::SerializeType::DESERIALIZE: \
-            (*_deserializer_##InputAdapterType)(property); \
-            break; \
-        default: \
-            break; \
-    }
 
 template<typename S>
 class serialization_visitor : public rttr::visitor
 {
     S* _s{};
     void* _instance{};
-//    bitsery::SerializeType _serializeType{bitsery::SerializeType::NONE};
 public:
-////    CC_SERIALIZATION_VISITOR_PROPERTIES(OutputAdapter, InputAdapter)
-//
-//    bitsery::Serializer<OutputAdapter>* _serializer_OutputAdapter{}; \
-//    bitsery::Deserializer<InputAdapter>* _deserializer_InputAdapter{};
 
-//    serialization_visitor(void* instance, bitsery::SerializeType stype)
-//    : _instance(instance)
-//    , _serializeType(stype)
-//    {
-//
-//    }
     serialization_visitor(void* instance, S* s)
     : _instance(instance)
-//    , _serializeType(stype)
     , _s(s)
     {
 
@@ -123,7 +91,7 @@ public:
     void visit_constructor(const constructor_info<T>& info)
     {
         using declaring_type_t = typename constructor_info<T>::declaring_type;
-        // m_chai.add(chaiscript::constructor<declaring_type_t(Ctor_Args...)>(), get_type_name<declaring_type_t>());
+
     }
 
     /////////////////////////////////////////////////////////////////////////////////////
@@ -131,7 +99,7 @@ public:
     template<typename T>
     void visit_global_method(const method_info<T>& info)
     {
-        // m_chai.add(chaiscript::fun(info.function_ptr), info.method_item.get_name().to_string());
+
     }
 
     /////////////////////////////////////////////////////////////////////////////////////
@@ -139,7 +107,7 @@ public:
     template<typename T>
     void visit_method(const method_info<T>& info)
     {
-        // m_chai.add(chaiscript::fun(info.function_ptr), info.method_item.get_name().to_string());
+
     }
 
     /////////////////////////////////////////////////////////////////////////////////////
@@ -149,34 +117,22 @@ public:
         using InstanceType = typename property_info<T>::declaring_type;
         auto* instance = static_cast<InstanceType*>(_instance);
 
+        printf("property name: %s\n", info.property_item.get_name().data());
+
         auto& property = instance->*info.property_accessor;
-
-//        CC_SERIALIZATION_VISITOR_PROPERTIES_HANDLER(OutputAdapter, InputAdapter)
-
-//        switch (_serializeType) {
-//            case bitsery::SerializeType::SERIALIZE:
-//                (*_serializer_OutputAdapter)(property);
-//                break;
-//            case bitsery::SerializeType::DESERIALIZE:
-//                (*_deserializer_InputAdapter)(property);
-//                break;
-//            default:
-//                break;
-//        }
         (*_s)(property);
     }
 
     template<typename T>
     void visit_getter_setter_property(const property_getter_setter_info<T>& info)
     {
-        // m_chai.add(chaiscript::fun(info.property_getter), std::string("get_") + info.property_item.get_name().to_string());
-        // m_chai.add(chaiscript::fun(info.property_setter), std::string("set_") + info.property_item.get_name().to_string());
+
     }
 
     template<typename T>
     void visit_readonly_property(const property_info<T>& info)
     {
-        // m_chai.add(chaiscript::fun(info.property_accessor), info.property_item.get_name().to_string());
+
     }
 
     /////////////////////////////////////////////////////////////////////////////////////

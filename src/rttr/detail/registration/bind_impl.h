@@ -81,9 +81,13 @@ using map_access_level_to_enum = conditional_t< std::is_same<T, detail::public_a
                                                 std::integral_constant<access_levels, access_levels::public_access>,
                                                 conditional_t< std::is_same<T, detail::protected_access>::value,
                                                                std::integral_constant<access_levels, access_levels::protected_access>,
-                                                               std::integral_constant<access_levels, access_levels::private_access>
-                                                             >
+                                                                conditional_t< std::is_same<T, detail::private_access>::value,
+                                                                               std::integral_constant<access_levels, access_levels::private_access>,
+                                                                                std::integral_constant<access_levels, access_levels::serialize_access>
+                                                                >
+                                                >
                                               >;
+
 
 
 /////////////////////////////////////////////////////////////////////////////////////////

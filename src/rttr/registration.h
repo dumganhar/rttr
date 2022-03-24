@@ -48,7 +48,8 @@ namespace detail
     struct public_access    {};
     struct protected_access {};
     struct private_access   {};
-    using access_levels_list = type_list<public_access, protected_access, private_access>;
+    struct serialize_access {};
+    using access_levels_list = type_list<public_access, protected_access, private_access, serialize_access>;
 }
 
 /*!
@@ -432,6 +433,8 @@ public:
      * \see access_levels
      */
     static const detail::private_access     private_access;
+
+    static const detail::serialize_access     serialize_access;
 
 private:
     registration() {}
