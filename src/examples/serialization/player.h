@@ -28,34 +28,34 @@
 #ifndef RTTR_PLAYER_H_
 #define RTTR_PLAYER_H_
 
-#include <rttr/type>
-
-struct player
-{
-public:
-    int bullets;
-    int speed;
-
-    player();
-
-    player(int ammo);
-
-    player(int ammo, int hitpoints);
-
-    void boost();
-
-    bool shoot();
-
-    void set_hp(int value);
-
-    int get_hp() const;
-
-    static player create_player(int ammo);
-
-private:
-    int hp;
-
-    RTTR_ENABLE()
-};
+//#include <rttr/type>
+//
+//struct player
+//{
+//public:
+//    int bullets;
+//    int speed;
+//
+//    player();
+//
+//    player(int ammo);
+//
+//    player(int ammo, int hitpoints);
+//
+//    void boost();
+//
+//    bool shoot();
+//
+//    void set_hp(int value);
+//
+//    int get_hp() const;
+//
+//    static player create_player(int ammo);
+//
+//private:
+//    int hp;
+//
+//    RTTR_ENABLE()
+//};
 
 #endif // RTTR_PLAYER_H_

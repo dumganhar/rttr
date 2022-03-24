@@ -29,51 +29,108 @@
 
 #include <rttr/type>
 
+
 #include "serialization_visitor.h"
+#include "my_visitor.h"
 
 #include <rttr/registration>
 
-#include <bitsery/bitsery.h>
-#include <bitsery/adapter/buffer.h>
-//to use brief syntax always include this header
-#include <bitsery/brief_syntax.h>
-//we also need additional traits to work with container types,
-//instead of including <bitsery/traits/vector.h> for vector traits, now we also need traits to work with brief_syntax types.
-//so include everything from <bitsery/brief_syntax/...> instead of <bitsery/traits/...>
-//otherwise we'll get static assert error, saying to define serialize function.
-#include <bitsery/brief_syntax/vector.h>
+#include <rttr/detail/visitor/visitor_iterator.h>
+
+
+
+//#define CC_SERIALIZE_FUNCTION(classType) \
+//template<typename AdapterType> \
+//void serialize(bitsery::Serializer<AdapterType> & s, classType& obj) { \
+//    my_serialization_visitor vi(&obj, s.getSerializeType()); \
+//    vi._serializer_OutputAdapter = &s; \
+//    vi.visit(rttr::type::get<classType>()); \
+//} \
+//\
+//template<typename AdapterType> \
+//void serialize(bitsery::Deserializer<AdapterType> & s, classType& obj) { \
+//    my_serialization_visitor vi(&obj, s.getSerializeType()); \
+//    vi._deserializer_InputAdapter = &s; \
+//    vi.visit(rttr::type::get<classType>()); \
+//}
+
+#define CC_SERIALIZE_ACCESS(classType, outputAdapterType, inputAdapterType) \
+void serialize(bitsery::Serializer<outputAdapterType> & s) { \
+    serialization_visitor vi(this, s.getSerializeType()); \
+    vi._serializer_##outputAdapterType = &s; \
+    vi.visit(rttr::type::get<classType>()); \
+}\
+void serialize(bitsery::Deserializer<inputAdapterType> & s) { \
+    serialization_visitor vi(this, s.getSerializeType()); \
+    vi._deserializer_##inputAdapterType = &s; \
+    vi.visit(rttr::type::get<classType>()); \
+}
 
 enum class MyEnum:uint16_t { V1,V2,V3 };
+
 struct MyStruct {
     uint32_t i;
     MyEnum e;
     std::vector<float> fs;
+
+//    CC_SERIALIZE_ACCESS(MyStruct, OutputAdapter, InputAdapter)
 };
 
+//struct MyDummyVisitor : public rttr::visitor {};
 
-
-//define serialize function as usual
-template <typename S>
-void serialize(S& s, MyStruct& my) {
-    //now we can use brief syntax with
-//    s(my.i);
-//    s(my.e);
-//    s(my.fs);
-
-    serialization_visitor vi(&my);
-
-//    auto func = [=](auto& property){
+//namespace rttr { namespace detail {
 //
-//    };
+//template<>
+//struct visitor_iterator<
+//            serialization_visitor<bitsery::Serializer<bitsery::OutputBufferAdapter<std::vector<unsigned char>>>>,
+//            serialization_visitor<bitsery::Deserializer<bitsery::InputBufferAdapter<std::vector<unsigned char>>>>> {
+//
+//    static void visit(visitor& visitor, const rttr::detail::type_visitor_invoker<rttr::type_list<MyStruct, rttr::type_list<>>>& invoker)
+//    {
+//    }
+//};
+//
+//}}
 
+//CC_SERIALIZE_FUNCTION(MyStruct)
+
+template<typename S>
+void serialize(S& s, MyStruct& obj) {
+    serialization_visitor<S> vi(&obj, &s);
     vi.visit(rttr::type::get<MyStruct>());
 }
 
 
-//some helper types
-using Buffer = std::vector<uint8_t>;
-using OutputAdapter = bitsery::OutputBufferAdapter<Buffer>;
-using InputAdapter = bitsery::InputBufferAdapter<Buffer>;
+//template<typename OutputAdapterType>
+//void serialize(bitsery::Serializer<OutputAdapterType> & s, MyStruct& obj) {
+//    {
+//        serialization_visitor vi(&obj, s.getSerializeType());
+//        vi._serializer_OutputAdapter = &s;
+//        vi.visit(rttr::type::get<MyStruct>());
+//    }
+//
+//    {
+//        my_visitor vi(&obj);
+//        vi.visit(rttr::type::get<MyStruct>());
+//    }
+//}
+//
+//template<typename InputAdapterType>
+//void serialize(bitsery::Deserializer<InputAdapterType> & s, MyStruct& obj) {
+//    {
+//        serialization_visitor vi(&obj, s.getSerializeType());
+//        vi._deserializer_InputAdapter = &s;
+//        vi.visit(rttr::type::get<MyStruct>());
+//    }
+//
+//    {
+//        my_visitor vi(&obj);
+//        vi.visit(rttr::type::get<MyStruct>());
+//    }
+//}
+
+
+
 
 using namespace rttr;
 
@@ -89,8 +146,8 @@ int main(int argc, char** argv)
 
     auto state = bitsery::quickDeserialization<InputAdapter>({buffer.begin(), writtenSize}, res);
 
-//    assert(state.first == bitsery::ReaderError::NoError && state.second);
-//    assert(data.fs == res.fs && data.i == res.i && data.e == res.e);
+    assert(state.first == bitsery::ReaderError::NoError && state.second);
+    assert(data.fs == res.fs && data.i == res.i && data.e == res.e);
 
     return 0;
 }

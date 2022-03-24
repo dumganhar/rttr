@@ -27,82 +27,74 @@
 
 #include "player.h"
 
-#include "serialization_visitor.h" // important!! place before '#include <rttr/registration>'
-#include <rttr/registration>
-
-#include <iostream>
-
-using namespace rttr;
-
-player::player()
-:   player(3, 100)
-{
-
-}
-
-player::player(int ammo)
-:   player(ammo, 100)
-{
-
-}
-
-player::player(int ammo, int hitpoints)
-:   bullets(ammo), hp(hitpoints)
-{
-
-}
-
-void player::boost()
-{
-    speed += 10;
-}
-
-bool player::shoot()
-{
-    if (bullets < 1)
-        return false;
-    --bullets;
-
-    std::cout << "shoot";
-    return true;
-}
-
-void player::set_hp(int value)
-{
-    hp = value;
-}
-
-int player::get_hp() const
-{
-    return hp;
-}
-
-player player::create_player(int ammo)
-{
-    return player(ammo);
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-
-RTTR_REGISTRATION
-{
-#define WAYPOINT \
-    do { printf("At111 marker: %d\n", __COUNTER__); } while(0);
-
-    WAYPOINT
-    WAYPOINT
-    WAYPOINT
-
-    rttr::registration::class_<player>("player")
-        .constructor<>()
-//        .constructor<int>()
-//        .constructor<int, int>()
-//        .property("hp", &player::get_hp, &player::set_hp)
-        .property("speed", &player::speed)
-//        .property_readonly("bullets", &player::bullets)
-//        .method("shoot", &player::shoot)
-//        .method("boost", &player::boost)
-//        .method("create_player", &player::create_player)
-        ;
-}
+//#include <rttr/registration>
+//
+//#include <iostream>
+//
+//using namespace rttr;
+//
+//player::player()
+//:   player(3, 100)
+//{
+//
+//}
+//
+//player::player(int ammo)
+//:   player(ammo, 100)
+//{
+//
+//}
+//
+//player::player(int ammo, int hitpoints)
+//:   bullets(ammo), hp(hitpoints)
+//{
+//
+//}
+//
+//void player::boost()
+//{
+//    speed += 10;
+//}
+//
+//bool player::shoot()
+//{
+//    if (bullets < 1)
+//        return false;
+//    --bullets;
+//
+//    std::cout << "shoot";
+//    return true;
+//}
+//
+//void player::set_hp(int value)
+//{
+//    hp = value;
+//}
+//
+//int player::get_hp() const
+//{
+//    return hp;
+//}
+//
+//player player::create_player(int ammo)
+//{
+//    return player(ammo);
+//}
+//
+///////////////////////////////////////////////////////////////////////////////////////////
+//
+//RTTR_REGISTRATION
+//{
+//    rttr::registration::class_<player>("player")
+//        .constructor<>()
+////        .constructor<int>()
+////        .constructor<int, int>()
+////        .property("hp", &player::get_hp, &player::set_hp)
+//        .property("speed", &player::speed)
+////        .property_readonly("bullets", &player::bullets)
+////        .method("shoot", &player::shoot)
+////        .method("boost", &player::boost)
+////        .method("create_player", &player::create_player)
+//        ;
+//}
 

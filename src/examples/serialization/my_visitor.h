@@ -25,71 +25,19 @@
 *                                                                                   *
 *************************************************************************************/
 
-#ifndef SERIALIZATION_VISITOR_H_
-#define SERIALIZATION_VISITOR_H_
-
-
+#ifndef MY_VISITOR_H_
+#define MY_VISITOR_H_
 
 #include <rttr/visitor.h>
 
-#include <bitsery/bitsery.h>
-#include <bitsery/bitsery.h>
-#include <bitsery/adapter/buffer.h>
-//to use brief syntax always include this header
-#include <bitsery/brief_syntax.h>
-//we also need additional traits to work with container types,
-//instead of including <bitsery/traits/vector.h> for vector traits, now we also need traits to work with brief_syntax types.
-//so include everything from <bitsery/brief_syntax/...> instead of <bitsery/traits/...>
-//otherwise we'll get static assert error, saying to define serialize function.
-#include <bitsery/brief_syntax/vector.h>
 
-
-
-
-//some helper types
-using Buffer = std::vector<uint8_t>;
-using OutputAdapter = bitsery::OutputBufferAdapter<Buffer>;
-using InputAdapter = bitsery::InputBufferAdapter<Buffer>;
-
-#define CC_SERIALIZATION_VISITOR_PROPERTIES(OutputAdapterType, InputAdapterType) \
-    bitsery::Serializer<OutputAdapterType>* _serializer_##OutputAdapterType{}; \
-    bitsery::Deserializer<InputAdapterType>* _deserializer_##InputAdapterType{};
-
-
-#define CC_SERIALIZATION_VISITOR_PROPERTIES_HANDLER(OutputAdapterType, InputAdapterType) \
-    switch (_serializeType) { \
-        case bitsery::SerializeType::SERIALIZE: \
-            (*_serializer_##OutputAdapterType)(property); \
-            break; \
-        case bitsery::SerializeType::DESERIALIZE: \
-            (*_deserializer_##InputAdapterType)(property); \
-            break; \
-        default: \
-            break; \
-    }
-
-template<typename S>
-class serialization_visitor : public rttr::visitor
+class my_visitor : public rttr::visitor
 {
-    S* _s{};
     void* _instance{};
-//    bitsery::SerializeType _serializeType{bitsery::SerializeType::NONE};
 public:
-////    CC_SERIALIZATION_VISITOR_PROPERTIES(OutputAdapter, InputAdapter)
-//
-//    bitsery::Serializer<OutputAdapter>* _serializer_OutputAdapter{}; \
-//    bitsery::Deserializer<InputAdapter>* _deserializer_InputAdapter{};
 
-//    serialization_visitor(void* instance, bitsery::SerializeType stype)
-//    : _instance(instance)
-//    , _serializeType(stype)
-//    {
-//
-//    }
-    serialization_visitor(void* instance, S* s)
+    my_visitor(void* instance)
     : _instance(instance)
-//    , _serializeType(stype)
-    , _s(s)
     {
 
     }
@@ -104,8 +52,7 @@ public:
     template<typename Derived, typename Base_Class, typename...Base_Classes>
     void iterate_base_classes()
     {
-        // m_chai.add(chaiscript::base_class<Base_Class, Derived>());
-        iterate_base_classes<Derived, Base_Classes...>();
+
     }
 
     /////////////////////////////////////////////////////////////////////////////////////
@@ -113,8 +60,7 @@ public:
     template<typename T, typename...Base_Classes>
     void visit_type_begin(const type_info<T>& info)
     {
-        using declaring_type_t = typename type_info<T>::declaring_type;
-        iterate_base_classes<declaring_type_t, Base_Classes...>();
+
     }
 
     /////////////////////////////////////////////////////////////////////////////////////
@@ -122,8 +68,7 @@ public:
     template<typename T, typename...Ctor_Args>
     void visit_constructor(const constructor_info<T>& info)
     {
-        using declaring_type_t = typename constructor_info<T>::declaring_type;
-        // m_chai.add(chaiscript::constructor<declaring_type_t(Ctor_Args...)>(), get_type_name<declaring_type_t>());
+
     }
 
     /////////////////////////////////////////////////////////////////////////////////////
@@ -131,7 +76,7 @@ public:
     template<typename T>
     void visit_global_method(const method_info<T>& info)
     {
-        // m_chai.add(chaiscript::fun(info.function_ptr), info.method_item.get_name().to_string());
+
     }
 
     /////////////////////////////////////////////////////////////////////////////////////
@@ -139,7 +84,7 @@ public:
     template<typename T>
     void visit_method(const method_info<T>& info)
     {
-        // m_chai.add(chaiscript::fun(info.function_ptr), info.method_item.get_name().to_string());
+
     }
 
     /////////////////////////////////////////////////////////////////////////////////////
@@ -151,19 +96,7 @@ public:
 
         auto& property = instance->*info.property_accessor;
 
-//        CC_SERIALIZATION_VISITOR_PROPERTIES_HANDLER(OutputAdapter, InputAdapter)
 
-//        switch (_serializeType) {
-//            case bitsery::SerializeType::SERIALIZE:
-//                (*_serializer_OutputAdapter)(property);
-//                break;
-//            case bitsery::SerializeType::DESERIALIZE:
-//                (*_deserializer_InputAdapter)(property);
-//                break;
-//            default:
-//                break;
-//        }
-        (*_s)(property);
     }
 
     template<typename T>
@@ -193,14 +126,8 @@ private:
     RTTR_ENABLE(visitor) // Important!! Otherwise the object instance cannot be casted from "visitor" to "chai_script_binding_visitor"
 };
 
-using my_serialization_visitor = serialization_visitor<bitsery::Serializer<OutputAdapter>>;
-using my_deserialization_visitor = serialization_visitor<bitsery::Deserializer<InputAdapter>>;
 
-RTTR_REGISTER_VISITOR(my_serialization_visitor); // Important!!
-RTTR_REGISTER_VISITOR(my_deserialization_visitor); // Important!!
+RTTR_REGISTER_VISITOR(my_visitor); // Important!!
                                            // In order to make the visitor available during registration
 
-
-
-
-#endif  // SERIALIZATION_VISITOR_H_
+#endif

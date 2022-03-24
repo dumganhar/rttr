@@ -26,6 +26,7 @@
 ####################################################################################
 
 set(HEADER_FILES serialization_visitor.h
+                 my_visitor.h
                  player.h
                  version.rc.in
                  )
