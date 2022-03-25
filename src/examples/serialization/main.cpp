@@ -53,6 +53,26 @@ public: \
 private:
 
 
+#define CC_STRUCT(classType) \
+    template<typename S> \
+    void serialize(S& s) { \
+        serialization_visitor<S> vi(this, &s); \
+        vi.visit_for_serialization(rttr::type::get<classType>()); \
+    }
+
+
+
+struct MyStructBase {
+    CC_CLASS(MyStructBase)
+public:
+
+    void fooBase() {
+        printf("MyStructBase::fooBase\n");
+    }
+
+    int myint{};
+};
+
 struct MyStruct {
     CC_CLASS(MyStruct)
 public:
@@ -85,13 +105,12 @@ private:
 };
 
 struct MyStruct3 {
-    CC_CLASS(MyStruct3)
-public:
+    CC_STRUCT(MyStruct3)
     std::string m_haha;
 };
 
-struct MySubStruct : public MyStruct {
-    CC_CLASS(MySubStruct, MyStruct)
+struct MySubStruct : public MyStruct, public MyStructBase {
+    CC_CLASS(MySubStruct, MyStruct, MyStructBase)
 public:
     MySubStruct() {}
     MySubStruct(uint32_t ai, MyEnum ae, const std::vector<float>& afs, const std::string& hello) : MyStruct(ai, ae, afs) {
@@ -128,12 +147,36 @@ using namespace rttr;
 
 int main(int argc, char** argv)
 {
+    type mystruct = rttr::type::get<MySubStruct>();
+    auto inst = mystruct.create();
+
+    auto prop_i = mystruct.get_property("i");
+    assert(prop_i.is_valid());
+    prop_i.set_value(inst, (uint32_t)123);
+
+    auto prop_myint = mystruct.get_property("myint");
+    assert(prop_myint.is_valid());
+    prop_myint.set_value(inst, (int)10101);
+
+    auto method_get_i = mystruct.get_method("get_i");
+    assert(method_get_i.is_valid());
+    variant myi = method_get_i.invoke(inst);
+    assert(myi.is_valid());
+    assert(myi.to_uint32() == 123);
+
+    auto method_fooBase = mystruct.get_method("fooBase");
+    assert(method_fooBase.is_valid());
+    method_fooBase.invoke(inst);
+
+    mystruct.destroy(inst);
+
     //set some random data
 //    MyStruct data{8941, MyEnum::V2, {15.0f, -8.5f, 0.045f}};
 //    MyStruct res{};
 
     MySubStruct data{8941, MyEnum::V2, {15.0f, -8.5f, 0.045f}, "world"};
     data.m_mystruct.m_haha = "hahaha";
+    data.myint = 1234;
     MySubStruct res{};
 
     //serialization, deserialization flow is unchanged as in basic usage
@@ -146,15 +189,25 @@ int main(int argc, char** argv)
     assert(data.get_fs() == res.get_fs() && data.get_i() == res.get_i() && data.get_e() == res.get_e());
     assert(data.get_hello() == res.get_hello());
     assert(data.m_mystruct.m_haha == res.m_mystruct.m_haha);
+    assert(data.myint == res.myint);
+
+
 
     return 0;
 }
 
 RTTR_REGISTRATION
 {
+    rttr::registration::class_<MyStructBase>("MyStructBase")
+        .constructor<>()
+        .property("myint", &MyStructBase::myint, registration::serialize_access)
+        .method("fooBase", &MyStructBase::fooBase)
+    ;
+
     rttr::registration::class_<MyStruct>("MyStruct")
         .constructor<>()
         .property("i", &MyStruct::i, registration::serialize_access)
+        .method("get_i", &MyStruct::get_i)
         .property("e", &MyStruct::e, registration::serialize_access)
         .property("fs", &MyStruct::fs, registration::serialize_access)
         .property("jjj", &MyStruct::jjj)

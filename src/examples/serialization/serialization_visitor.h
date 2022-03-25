@@ -59,7 +59,11 @@ public:
     : _instance(instance)
     , _s(s)
     {
+        printf("~~~~~~~~~ construcor ~~~~~~~~~~~~~~~~\n");
+    }
 
+    ~serialization_visitor() override {
+        printf("~~~~~~~~~ destrucor ~~~~~~~~~~~~~~~~\n");
     }
 
     /////////////////////////////////////////////////////////////////////////////////////
@@ -72,7 +76,6 @@ public:
     template<typename Derived, typename Base_Class, typename...Base_Classes>
     void iterate_base_classes()
     {
-        // m_chai.add(chaiscript::base_class<Base_Class, Derived>());
         iterate_base_classes<Derived, Base_Classes...>();
     }
 
@@ -82,7 +85,14 @@ public:
     void visit_type_begin(const type_info<T>& info)
     {
         using declaring_type_t = typename type_info<T>::declaring_type;
-        iterate_base_classes<declaring_type_t, Base_Classes...>();
+//        iterate_base_classes<declaring_type_t, Base_Classes...>();
+        printf("---------------------------  visit_type_begin: %s\n", info.type_item.get_name().data());
+    }
+
+    template<typename T, typename...Base_Classes>
+    void visit_type_end(const type_info<T>& info)
+    {
+        printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>  visit_type_end: %s\n", info.type_item.get_name().data());
     }
 
     /////////////////////////////////////////////////////////////////////////////////////
