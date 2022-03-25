@@ -216,17 +216,28 @@ bool type::destroy(variant& obj) const RTTR_NOEXCEPT
 property type::get_property(string_view name) const RTTR_NOEXCEPT
 {
     const auto raw_t = get_raw_type();
-    const auto& vec = raw_t.m_type_data->m_class_data.m_properties;
-    // properties are ordered from base to derived
-    // use reverse iterator to find the most-derived propertie
-    // when searching instance registry by name
-    auto ret = std::find_if(vec.crbegin(), vec.crend(),
-                            [name](const property& item)
-                            {
-                                return (item.get_name() == name);
-                            });
-    if (ret != vec.crend())
-        return *ret;
+    {
+        const auto& vec = raw_t.m_type_data->m_class_data.m_properties;
+        // properties are ordered from base to derived
+        // use reverse iterator to find the most-derived propertie
+        // when searching instance registry by name
+        auto ret = std::find_if(vec.crbegin(), vec.crend(),
+                                [name](const property& item)
+                                {
+                                    return (item.get_name() == name);
+                                });
+        if (ret != vec.crend())
+            return *ret;
+    }
+
+    const auto& baseTypes = raw_t.m_type_data->m_class_data.m_base_types;
+    for (const auto& baseType : baseTypes)
+    {
+        auto ret = baseType.get_property(name);
+        if (ret.is_valid()) {
+            return ret;
+        }
+    }
 
     return detail::create_invalid_item<property>();
 }
@@ -307,6 +318,15 @@ method type::get_method(string_view name) const RTTR_NOEXCEPT
                             });
     if (ret != vec.crend())
         return *ret;
+
+    const auto& baseTypes = raw_t.m_type_data->m_class_data.m_base_types;
+    for (const auto& baseType : baseTypes)
+    {
+        auto ret = baseType.get_method(name);
+        if (ret.is_valid()) {
+            return ret;
+        }
+    }
 
     return detail::create_invalid_item<method>();
 }
