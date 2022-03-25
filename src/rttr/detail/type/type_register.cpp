@@ -903,15 +903,16 @@ void type_register_private::update_class_list(const type& t, T item_ptr)
     detail::remove_cv_ref_t<decltype(all_class_items)> item_vec(item_range.begin(), item_range.end());
     all_class_items.reserve(all_class_items.size() + 1);
     all_class_items.clear(); // this will not reduce the capacity, i.e. new memory allocation may not necessary
-    for (const auto& base_type : t.get_base_classes())
-    {
-        auto base_properties = get_items_for_type(base_type, base_type.m_type_data->m_class_data.*item_ptr);
-        if (base_properties.empty())
-            continue;
 
-        all_class_items.reserve(all_class_items.size() + base_properties.size());
-        all_class_items.insert(all_class_items.end(), base_properties.begin(), base_properties.end());
-    }
+//cjh    for (const auto& base_type : t.get_base_classes())
+//    {
+//        auto base_properties = get_items_for_type(base_type, base_type.m_type_data->m_class_data.*item_ptr);
+//        if (base_properties.empty())
+//            continue;
+//
+//        all_class_items.reserve(all_class_items.size() + base_properties.size());
+//        all_class_items.insert(all_class_items.end(), base_properties.begin(), base_properties.end());
+//    }
 
     // insert own class items
     all_class_items.reserve(all_class_items.size() + item_vec.size());
