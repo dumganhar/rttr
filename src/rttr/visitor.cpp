@@ -61,6 +61,10 @@ void visitor::visit(type t)
 }
 
 void visitor::visit_for_serialization(type t) {
+    // first we visit all base classes
+    for (auto& t_ : t.get_base_classes())
+        visit_impl_serialization(t_);
+
     // as last step, the current type itself
     visit_impl_serialization(t);
 }
